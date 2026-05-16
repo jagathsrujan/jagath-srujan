@@ -12,6 +12,7 @@ const links = {
 const projects = [
   {
     eyebrow: "Climate intelligence",
+    status: "CIVIC RISK SYSTEM",
     title: "VanaRaksha",
     href: "https://github.com/jagathsrujan/vana-raksha",
     summary:
@@ -24,6 +25,7 @@ const projects = [
   },
   {
     eyebrow: "Career systems",
+    status: "AUTOMATION PIPELINE",
     title: "ME Job Scout",
     href: "https://github.com/jagathsrujan/me-job-scout",
     summary:
@@ -36,6 +38,7 @@ const projects = [
   },
   {
     eyebrow: "Engineering direction",
+    status: "AEROSPACE TRACK",
     title: "Aerospace and defence path",
     href: "https://github.com/jagathsrujan/jagath-srujan",
     summary:
@@ -210,8 +213,8 @@ function FlightReveal() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.32 }}
           >
-            <span>flight path armed</span>
-            <strong>portfolio incoming</strong>
+            <span>systems armed</span>
+            <strong>portfolio online</strong>
           </motion.div>
           <button className="flight-skip" type="button" onClick={finishReveal}>
             Skip
@@ -254,14 +257,14 @@ function Hero() {
         animate="visible"
       >
         <motion.p className="kicker" variants={fadeUp}>
-          Bengaluru / Mechanical engineering / AI tools
+          Bengaluru / Mechanical systems / Aerospace + defence
         </motion.p>
         <motion.h1 id="hero-title" variants={fadeUp}>
           Jagath Srujan
         </motion.h1>
         <motion.p className="hero-lede" variants={fadeUp}>
           Mechanical engineering student building AI-assisted tools for climate,
-          careers, and engineered systems.
+          career intelligence, propulsion curiosity, and engineered systems.
         </motion.p>
         <motion.div
           className="hero-actions"
@@ -306,7 +309,10 @@ function ProjectCard({ project, index }) {
       whileInView="visible"
       viewport={{ once: true, amount: 0.22 }}
     >
-      <p className="eyebrow">{project.eyebrow}</p>
+      <div className="project-meta">
+        <p className="eyebrow">{project.eyebrow}</p>
+        <span>{project.status}</span>
+      </div>
       <div className="project-heading">
         <h3>{project.title}</h3>
         <motion.a
@@ -317,7 +323,8 @@ function ProjectCard({ project, index }) {
           View
         </motion.a>
       </div>
-      <p>{project.summary}</p>
+      <p className="spec-label">Mission</p>
+      <p className="project-summary">{project.summary}</p>
       <dl>
         <div>
           <dt>Build</dt>
@@ -328,6 +335,7 @@ function ProjectCard({ project, index }) {
           <dd>{project.impact}</dd>
         </div>
       </dl>
+      <p className="spec-label stack-label">Stack</p>
       <ul className="tag-list" aria-label={`${project.title} stack`}>
         {project.stack.map((item) => (
           <li key={item}>{item}</li>
@@ -370,8 +378,8 @@ function App() {
 
         <section className="section work-section" id="work" aria-labelledby="work-title">
           <SectionIntro
-            eyebrow="Selected work"
-            title="Proof over polish alone"
+            eyebrow="Mission files"
+            title="Systems proof, not just polish"
             titleId="work-title"
           >
             A small but focused set of projects that show practical systems thinking:
@@ -392,8 +400,8 @@ function App() {
             whileInView="visible"
             viewport={{ once: true, amount: 0.26 }}
           >
-            <p className="eyebrow">Engineering direction</p>
-            <h2>Curious, technical, and deliberately cross-domain.</h2>
+            <p className="eyebrow">Engineering vector</p>
+            <h2>Mechanical core. Aerospace edge. Defense-grade discipline.</h2>
             <p>
               The center of gravity is mechanical engineering. The edge is where
               software, AI, public data, and physical systems make that engineering
@@ -402,13 +410,13 @@ function App() {
             <div className="direction-marks" aria-label="Focus areas">
               <span>climate resilience</span>
               <span>career intelligence</span>
-              <span>aerospace systems</span>
+              <span>propulsion systems</span>
             </div>
           </motion.div>
         </section>
 
         <section className="section skills-section" id="skills">
-          <SectionIntro eyebrow="Capabilities" title="Tools for thinking and building">
+          <SectionIntro eyebrow="Capabilities" title="Technical payload">
             The portfolio should keep evolving as the work gets deeper: each skill
             is strongest when tied to a visible project, result, or build note.
           </SectionIntro>

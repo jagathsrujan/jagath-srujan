@@ -4,11 +4,11 @@ Recruiter-focused portfolio website for Jagath Srujan, a Bengaluru-based mechani
 
 ## Highlights
 
-- Takram Calm visual direction with warm editorial layout and precise grid structure.
+- Mechanical aerospace/defense visual direction with graphite, titanium, blueprint blue, radar green, and signal amber.
 - Full-viewport hero using Jagath's portrait as an extended background image.
-- One-per-session fighter-plane reveal built with Motion for React.
+- One-per-session fighter-plane reveal with tactical HUD styling, amber trail, and technical diagram accents.
 - Scroll progress indicator and Motion-powered reveal animations.
-- Project cards that slide in from the side on scroll.
+- Engineering spec-panel project cards that slide in from the side on scroll.
 - Subtle hover/tap motion for portfolio links and project actions.
 - Reduced-motion support for accessibility.
 - GitHub Pages deployment through GitHub Actions.
