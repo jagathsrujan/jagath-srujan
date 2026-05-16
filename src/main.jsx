@@ -1,8 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import introVideoUrl from "./assets/intro/portfolio-intro.mp4";
 import portraitUrl from "./assets/jagath-portrait.jpeg";
 import "./styles.css";
+
+const INTRO_KEY = "jagath-portfolio-video-intro-seen";
 
 const links = {
   github: "https://github.com/jagathsrujan",
@@ -104,6 +107,73 @@ const buttonPress = {
   whileTap: { y: 0, scale: 0.975 },
   transition: { duration: 0.18, ease: "easeOut" },
 };
+
+function VideoIntro() {
+  const shouldReduceMotion = useReducedMotion();
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof window === "undefined") {
+      return true;
+    }
+
+    return window.sessionStorage.getItem(INTRO_KEY) !== "true";
+  });
+  const [isDeparting, setIsDeparting] = useState(false);
+
+  const finishIntro = () => {
+    if (isDeparting) {
+      return;
+    }
+
+    setIsDeparting(true);
+    window.setTimeout(() => {
+      window.sessionStorage.setItem(INTRO_KEY, "true");
+      setIsVisible(false);
+    }, 780);
+  };
+
+  useEffect(() => {
+    if (!isVisible) {
+      return undefined;
+    }
+
+    const timeout = window.setTimeout(finishIntro, shouldReduceMotion ? 1200 : 9000);
+    return () => window.clearTimeout(timeout);
+  }, [isVisible, shouldReduceMotion]);
+
+  return (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          className={`video-intro${isDeparting ? " is-departing" : ""}`}
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
+          aria-label="Portfolio opening video"
+        >
+          {!shouldReduceMotion && (
+            <video
+              src={introVideoUrl}
+              autoPlay
+              muted
+              playsInline
+              preload="auto"
+              onEnded={finishIntro}
+              onError={finishIntro}
+            />
+          )}
+          <div className="video-intro__shade" />
+          <div className="video-intro__copy" aria-hidden="true">
+            <span>portfolio boot sequence</span>
+            <strong>Jagath Srujan</strong>
+          </div>
+          <button className="video-intro__skip" type="button" onClick={finishIntro}>
+            Skip
+          </button>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
 
 function useScrollProgress() {
   const [progress, setProgress] = useState(0);
@@ -272,6 +342,7 @@ function App() {
 
   return (
     <>
+      <VideoIntro />
       <Header progress={progress} />
       <main>
         <Hero />

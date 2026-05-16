@@ -1,8 +1,14 @@
 :root {
   color-scheme: dark;
+  --font-body:
+    "Aptos", "Inter", "Segoe UI", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, sans-serif;
+  --font-display:
+    "DIN Condensed", "Bahnschrift Condensed", "Arial Narrow", "Roboto Condensed",
+    Impact, Haettenschweiler, sans-serif;
+  --font-mono: "Aptos Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+    var(--font-body);
   --carbon: #050607;
   --titanium-black: #0b0d0f;
   --gunmetal: #14171a;
@@ -56,6 +62,106 @@ img {
   max-width: 100%;
 }
 
+.video-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, #020303, #090b0c 48%, #030404),
+    var(--carbon);
+}
+
+.video-intro video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(0.35) contrast(1.08) brightness(0.72);
+  transform: scale(1.02);
+}
+
+.video-intro__shade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.84), rgba(0, 0, 0, 0.16) 48%, rgba(0, 0, 0, 0.74)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 34%, rgba(0, 0, 0, 0.82)),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 7px);
+}
+
+.video-intro.is-departing::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    radial-gradient(circle at 50% 50%, rgba(235, 237, 238, 0.92), rgba(188, 194, 197, 0.38) 28%, transparent 62%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent);
+  animation: intro-flash 780ms ease forwards;
+}
+
+.video-intro__copy {
+  position: absolute;
+  bottom: clamp(34px, 8vw, 72px);
+  left: clamp(22px, 6vw, 76px);
+  display: grid;
+  gap: 8px;
+  color: var(--silver);
+  text-transform: uppercase;
+}
+
+.video-intro__copy span {
+  color: var(--smoke);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.video-intro__copy strong {
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 9vw, 7rem);
+  line-height: 0.88;
+  letter-spacing: 0.01em;
+}
+
+.video-intro__skip {
+  position: absolute;
+  right: clamp(18px, 4vw, 42px);
+  bottom: clamp(18px, 4vw, 42px);
+  min-height: 42px;
+  padding: 0 18px;
+  color: var(--silver);
+  font: 800 0.74rem/1 var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  background: rgba(9, 11, 12, 0.74);
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 16px 34px rgba(0, 0, 0, 0.32);
+}
+
+@keyframes intro-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+
+  48% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.18);
+  }
+}
+
 .site-header {
   position: fixed;
   top: 0;
@@ -86,18 +192,21 @@ img {
 
 .wordmark {
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   place-items: center;
   color: var(--silver);
   font-size: 0.78rem;
   font-weight: 900;
   letter-spacing: 0;
-  background: linear-gradient(145deg, #15191c, #08090a);
+  background:
+    radial-gradient(circle at 35% 22%, rgba(226, 229, 231, 0.18), transparent 28%),
+    linear-gradient(145deg, #15191c, #08090a);
   border: 1px solid var(--line-strong);
-  border-radius: 3px;
+  border-radius: 50%;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 0 4px rgba(202, 207, 210, 0.035),
     0 16px 38px rgba(0, 0, 0, 0.4);
 }
 
@@ -105,6 +214,7 @@ nav {
   display: flex;
   gap: clamp(12px, 3vw, 28px);
   color: var(--smoke);
+  font-family: var(--font-mono);
   font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -172,6 +282,7 @@ main {
 .eyebrow {
   margin: 0 0 18px;
   color: var(--smoke);
+  font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.16em;
@@ -189,7 +300,7 @@ h1 {
   max-width: 820px;
   margin-bottom: 22px;
   color: var(--silver);
-  font-family: "Arial Narrow", "Roboto Condensed", Impact, Haettenschweiler, sans-serif;
+  font-family: var(--font-display);
   font-size: clamp(4.2rem, 13vw, 10rem);
   font-weight: 800;
   line-height: 0.84;
@@ -223,13 +334,16 @@ h1 {
   align-items: center;
   justify-content: center;
   min-height: 44px;
-  padding: 0 20px;
+  padding: 0 22px;
   color: var(--steel);
+  font-family: var(--font-body);
   font-weight: 900;
   border: 1px solid var(--line-strong);
-  border-radius: 3px;
+  border-radius: 999px;
   background: linear-gradient(180deg, #15191c, #090b0c);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 12px 28px rgba(0, 0, 0, 0.22);
   transition:
     border-color 180ms ease,
     background 180ms ease,
@@ -260,7 +374,7 @@ h1 {
   width: min(78vw, 940px);
   margin: 0;
   border: 1px solid var(--line-strong);
-  border-radius: 2px;
+  border-radius: 8px;
   box-shadow: var(--shadow);
   overflow: hidden;
   mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.24) 0%, rgba(0, 0, 0, 0.72) 31%, #000 53%);
@@ -320,7 +434,7 @@ figcaption {
 .contact-card h2 {
   margin-bottom: 0;
   color: var(--silver);
-  font-family: "Arial Narrow", "Roboto Condensed", Impact, Haettenschweiler, sans-serif;
+  font-family: var(--font-display);
   font-size: clamp(2.1rem, 4.7vw, 4.85rem);
   font-weight: 800;
   line-height: 0.96;
@@ -349,25 +463,28 @@ figcaption {
   display: flex;
   min-height: 520px;
   flex-direction: column;
-  padding: 22px;
+  padding: 24px;
   background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 34%),
     linear-gradient(180deg, rgba(27, 31, 34, 0.94), rgba(10, 12, 13, 0.96)),
     repeating-linear-gradient(90deg, transparent 0 54px, rgba(255, 255, 255, 0.035) 54px 55px);
   border: 1px solid var(--line);
-  border-radius: 2px;
+  border-radius: 8px;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     0 18px 44px rgba(0, 0, 0, 0.24);
+  overflow: hidden;
 }
 
 .project-card::before {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 42%;
+  top: 14px;
+  left: 24px;
+  width: 62px;
   height: 2px;
   content: "";
   background: linear-gradient(90deg, rgba(226, 229, 231, 0.64), transparent);
+  border-radius: 999px;
 }
 
 .project-meta {
@@ -382,15 +499,16 @@ figcaption {
 }
 
 .project-meta span {
-  padding: 5px 8px;
+  padding: 6px 11px;
   color: var(--silver);
+  font-family: var(--font-mono);
   font-size: 0.62rem;
   font-weight: 900;
   letter-spacing: 0.09em;
   white-space: nowrap;
   background: rgba(202, 207, 210, 0.08);
   border: 1px solid var(--line);
-  border-radius: 2px;
+  border-radius: 999px;
 }
 
 .project-heading {
@@ -410,7 +528,7 @@ figcaption {
 
 .project-heading a {
   min-height: 36px;
-  padding: 0 14px;
+  padding: 0 16px;
   color: var(--silver);
   font-size: 0.82rem;
 }
@@ -418,6 +536,7 @@ figcaption {
 .spec-label {
   margin: 4px 0 8px;
   color: var(--steel);
+  font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 900;
   letter-spacing: 0.14em;
@@ -439,6 +558,7 @@ dl {
 dt {
   margin-bottom: 6px;
   color: var(--steel);
+  font-family: var(--font-mono);
   font-size: 0.68rem;
   font-weight: 900;
   letter-spacing: 0.14em;
@@ -470,13 +590,13 @@ dd {
 }
 
 .tag-list li {
-  padding: 7px 10px;
+  padding: 7px 12px;
   color: var(--steel);
   font-size: 0.76rem;
   font-weight: 800;
   background: rgba(202, 207, 210, 0.065);
   border: 1px solid rgba(202, 207, 210, 0.14);
-  border-radius: 2px;
+  border-radius: 999px;
 }
 
 .direction-section {
@@ -498,7 +618,7 @@ dd {
   padding: clamp(48px, 8vw, 86px);
   color: var(--steel);
   border: 1px solid var(--line-strong);
-  border-radius: 2px;
+  border-radius: 8px;
   background:
     linear-gradient(180deg, rgba(27, 31, 34, 0.82), rgba(7, 8, 9, 0.9)),
     repeating-linear-gradient(90deg, transparent 0 72px, rgba(255, 255, 255, 0.032) 72px 73px);
@@ -530,19 +650,24 @@ dd {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1px;
   margin-top: 46px;
-  background: var(--line-strong);
-  border: 1px solid var(--line-strong);
+  background: transparent;
+  border: 0;
 }
 
 .direction-marks span {
   min-height: 96px;
   padding: 18px;
   color: var(--steel);
+  font-family: var(--font-mono);
   font-size: 0.82rem;
   font-weight: 900;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  background: #0a0c0d;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 46%),
+    #0a0c0d;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
 }
 
 .skills-grid {
@@ -554,15 +679,17 @@ dd {
 
 .skills-grid li {
   display: flex;
-  min-height: 104px;
-  align-items: end;
-  padding: 18px;
+  min-height: 92px;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 22px;
   color: var(--steel);
   font-weight: 900;
   line-height: 1.2;
+  text-align: center;
   background: rgba(20, 23, 26, 0.78);
   border: 1px solid var(--line);
-  border-radius: 2px;
+  border-radius: 999px;
 }
 
 .contact-section {
@@ -575,7 +702,7 @@ dd {
     linear-gradient(90deg, rgba(20, 23, 26, 0.94), rgba(8, 9, 10, 0.94)),
     repeating-linear-gradient(0deg, transparent 0 72px, rgba(255, 255, 255, 0.032) 72px 73px);
   border: 1px solid var(--line-strong);
-  border-radius: 2px;
+  border-radius: 8px;
   box-shadow: var(--shadow);
 }
 

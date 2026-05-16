@@ -5,6 +5,7 @@ Recruiter-focused portfolio website for Jagath Srujan, a Bengaluru-based mechani
 ## Highlights
 
 - Black titanium mechanical/aerospace visual direction with carbon black, gunmetal, brushed silver, and smoke-gray text.
+- Full-screen opening video reveal using a web-optimized MP4 from Jagath's uploaded DaVinci Resolve export.
 - Full-viewport hero using Jagath's portrait as an extended background image.
 - Scroll progress indicator and Motion-powered reveal animations.
 - Engineering spec-panel project cards that slide in from the side on scroll.
@@ -37,6 +38,12 @@ The dev server uses:
 
 ```text
 http://127.0.0.1:5174/
+```
+
+Portfolio route:
+
+```text
+http://127.0.0.1:5174/jagath-srujan/
 ```
 
 ## Build
