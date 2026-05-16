@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
-import portraitUrl from "./portrait-data";
+import portraitUrl from "./assets/jagath-portrait.jpeg";
 import "./styles.css";
 
 const links = {
