@@ -6,8 +6,10 @@ Recruiter-focused portfolio website for Jagath Srujan, a Bengaluru-based mechani
 
 - Takram Calm visual direction with warm editorial layout and precise grid structure.
 - Full-viewport hero using Jagath's portrait as an extended background image.
-- Scroll progress indicator and reveal animations.
+- One-per-session fighter-plane reveal built with Motion for React.
+- Scroll progress indicator and Motion-powered reveal animations.
 - Project cards that slide in from the side on scroll.
+- Subtle hover/tap motion for portfolio links and project actions.
 - Reduced-motion support for accessibility.
 - GitHub Pages deployment through GitHub Actions.
 
@@ -21,8 +23,8 @@ Recruiter-focused portfolio website for Jagath Srujan, a Bengaluru-based mechani
 
 - React 18
 - Vite
+- Motion for React
 - CSS custom properties
-- IntersectionObserver scroll reveals
 - GitHub Pages
 
 ## Local Development
