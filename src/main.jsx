@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import portraitUrl from "./assets/jagath-portrait.jpeg";
 import "./styles.css";
 
@@ -62,8 +62,6 @@ const skills = [
   "Systems research",
 ];
 
-const REVEAL_KEY = "fighter-reveal-seen";
-
 const fadeUp = {
   hidden: { opacity: 0, y: 26 },
   visible: {
@@ -107,19 +105,6 @@ const buttonPress = {
   transition: { duration: 0.18, ease: "easeOut" },
 };
 
-const flightReveal = {
-  plane: {
-    x: ["-32vw", "18vw", "78vw", "132vw"],
-    y: ["8vh", "1vh", "-3vh", "-8vh"],
-    rotate: [-7, -4, 1, 4],
-    opacity: [0, 1, 1, 0],
-  },
-  trail: {
-    scaleX: [0, 0.2, 0.9, 1.35],
-    opacity: [0, 0.68, 0.82, 0],
-  },
-};
-
 function useScrollProgress() {
   const [progress, setProgress] = useState(0);
 
@@ -139,90 +124,6 @@ function useScrollProgress() {
   }, []);
 
   return progress;
-}
-
-function FlightReveal() {
-  const shouldReduceMotion = useReducedMotion();
-  const [isVisible, setIsVisible] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.sessionStorage.getItem(REVEAL_KEY) !== "true";
-  });
-
-  const finishReveal = useCallback(() => {
-    window.sessionStorage.setItem(REVEAL_KEY, "true");
-    setIsVisible(false);
-  }, []);
-
-  useEffect(() => {
-    if (!isVisible) return undefined;
-
-    const timer = window.setTimeout(
-      finishReveal,
-      shouldReduceMotion ? 900 : 4300
-    );
-    return () => window.clearTimeout(timer);
-  }, [finishReveal, isVisible, shouldReduceMotion]);
-
-  return (
-    <AnimatePresence>
-      {isVisible ? (
-        <motion.div
-          className="flight-reveal"
-          role="dialog"
-          aria-label="Fighter plane portfolio reveal"
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.58, ease: "easeOut" } }}
-        >
-          <motion.div
-            className="flight-reveal-sweep"
-            initial={{ clipPath: "inset(0 0% 0 0)" }}
-            animate={{ clipPath: "inset(0 0% 0 100%)" }}
-            transition={{
-              duration: shouldReduceMotion ? 0.55 : 3.15,
-              delay: shouldReduceMotion ? 0 : 0.55,
-              ease: [0.16, 1, 0.3, 1],
-            }}
-          />
-          <div className="flight-clouds" aria-hidden="true" />
-          <motion.div
-            className="flight-trail"
-            aria-hidden="true"
-            initial={{ scaleX: 0, opacity: 0 }}
-            animate={shouldReduceMotion ? { opacity: 0 } : flightReveal.trail}
-            transition={{ duration: 3.25, delay: 0.34, ease: [0.16, 1, 0.3, 1] }}
-          />
-          <motion.div
-            className="fighter-plane"
-            aria-hidden="true"
-            initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: "-32vw" }}
-            animate={
-              shouldReduceMotion
-                ? { opacity: 0 }
-                : flightReveal.plane
-            }
-            transition={{ duration: 3.72, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <svg viewBox="0 0 220 72" focusable="false">
-              <path d="M216 34 162 45 119 66 101 66 125 43 72 43 44 66 30 66 42 42 10 38 4 34 10 30 42 26 30 6 45 6 72 27 125 27 101 6 119 6 162 26 216 34Z" />
-              <path className="fighter-plane-highlight" d="M72 34h84l24-7-20 13H72z" />
-            </svg>
-          </motion.div>
-          <motion.div
-            className="flight-copy"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.32 }}
-          >
-            <span>systems armed</span>
-            <strong>portfolio online</strong>
-          </motion.div>
-          <button className="flight-skip" type="button" onClick={finishReveal}>
-            Skip
-          </button>
-        </motion.div>
-      ) : null}
-    </AnimatePresence>
-  );
 }
 
 function Header({ progress }) {
@@ -371,7 +272,6 @@ function App() {
 
   return (
     <>
-      <FlightReveal />
       <Header progress={progress} />
       <main>
         <Hero />
@@ -432,7 +332,7 @@ function App() {
               <motion.li
                 key={skill}
                 variants={fadeUp}
-                whileHover={{ y: -4, borderColor: "rgba(125, 38, 55, 0.34)" }}
+                whileHover={{ y: -4, borderColor: "rgba(202, 207, 210, 0.34)" }}
                 whileTap={{ scale: 0.985 }}
                 transition={{ duration: 0.18, ease: "easeOut" }}
               >

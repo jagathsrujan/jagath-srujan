@@ -4,9 +4,8 @@ Recruiter-focused portfolio website for Jagath Srujan, a Bengaluru-based mechani
 
 ## Highlights
 
-- Mechanical aerospace/defense visual direction with graphite, titanium, blueprint blue, radar green, and signal amber.
+- Black titanium mechanical/aerospace visual direction with carbon black, gunmetal, brushed silver, and smoke-gray text.
 - Full-viewport hero using Jagath's portrait as an extended background image.
-- One-per-session fighter-plane reveal with tactical HUD styling, amber trail, and technical diagram accents.
 - Scroll progress indicator and Motion-powered reveal animations.
 - Engineering spec-panel project cards that slide in from the side on scroll.
 - Subtle hover/tap motion for portfolio links and project actions.
