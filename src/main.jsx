@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+} from "motion/react";
 import introVideoUrl from "./assets/intro/portfolio-intro.mp4";
 import portraitUrl from "./assets/jagath-portrait.jpeg";
 import "./styles.css";
@@ -15,7 +19,9 @@ const links = {
 const projects = [
   {
     eyebrow: "Climate intelligence",
+    missionCode: "VR-01",
     status: "CIVIC RISK SYSTEM",
+    metric: "4 risk signals",
     title: "VanaRaksha",
     href: "https://github.com/jagathsrujan/vana-raksha",
     summary:
@@ -24,11 +30,15 @@ const projects = [
       "React, ward-level datasets, photo evidence intake, AI-assisted risk synthesis, deterministic fallback scoring.",
     impact:
       "Turns fragmented civic and environmental signals into an auditable risk report for buyers, planners, and researchers.",
+    detail:
+      "Designed as an engineering-grade decision aid: gather evidence, score known hazards, and keep the reasoning legible for non-technical users.",
     stack: ["React", "AI reasoning", "Climate data", "Bengaluru"],
   },
   {
     eyebrow: "Career systems",
+    missionCode: "JS-02",
     status: "AUTOMATION PIPELINE",
+    metric: "daily signal loop",
     title: "ME Job Scout",
     href: "https://github.com/jagathsrujan/me-job-scout",
     summary:
@@ -37,11 +47,15 @@ const projects = [
       "Company job scraping, daily digests, skill extraction, and portfolio recommendations for mechanical engineering growth.",
     impact:
       "Connects learning effort to real hiring signals instead of guessing what to build next.",
+    detail:
+      "Built to turn job-market noise into repeatable learning direction: scrape, classify, summarize, and convert role demand into project ideas.",
     stack: ["Python", "Automation", "Job data", "Skill mapping"],
   },
   {
     eyebrow: "Engineering direction",
+    missionCode: "AE-03",
     status: "AEROSPACE TRACK",
+    metric: "long-range vector",
     title: "Aerospace and defence path",
     href: "https://github.com/jagathsrujan/jagath-srujan",
     summary:
@@ -50,6 +64,8 @@ const projects = [
       "Use this space for CAD studies, propulsion notes, systems analysis, and build logs as the work matures.",
     impact:
       "Frames a clear long-term technical direction while the portfolio grows from student work into proof-of-work.",
+    detail:
+      "A living track for CAD studies, propulsion notes, simulation experiments, teardown logs, and mechanical systems research.",
     stack: ["Mechanical engineering", "Aerospace", "Defence", "Systems"],
   },
 ];
@@ -74,6 +90,16 @@ const fadeUp = {
   },
 };
 
+const stagger = {
+  hidden: {},
+  visible: {
+    transition: {
+      delayChildren: 0.1,
+      staggerChildren: 0.08,
+    },
+  },
+};
+
 const staggerParent = {
   hidden: {},
   visible: {
@@ -81,6 +107,17 @@ const staggerParent = {
       delayChildren: 0.12,
       staggerChildren: 0.09,
     },
+  },
+};
+
+const panelReveal = {
+  hidden: { opacity: 0, y: 42, scale: 0.985, filter: "blur(10px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    filter: "blur(0px)",
+    transition: { duration: 0.88, ease: [0.16, 1, 0.3, 1] },
   },
 };
 
@@ -102,11 +139,18 @@ const slideFromSide = {
   }),
 };
 
-const buttonPress = {
-  whileHover: { y: -3, scale: 1.015 },
+const magneticHover = {
+  whileHover: {
+    y: -5,
+    scale: 1.035,
+    boxShadow: "0 18px 46px rgba(0, 0, 0, 0.42)",
+  },
   whileTap: { y: 0, scale: 0.975 },
   transition: { duration: 0.18, ease: "easeOut" },
 };
+
+const buttonPress = magneticHover;
+const borderTrace = { "--trace": "100%" };
 
 function VideoIntro() {
   const shouldReduceMotion = useReducedMotion();
@@ -196,7 +240,47 @@ function useScrollProgress() {
   return progress;
 }
 
-function Header({ progress }) {
+function useActiveSection(sectionIds) {
+  const [activeSection, setActiveSection] = useState(sectionIds[0]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+        if (visibleEntry?.target.id) {
+          setActiveSection(visibleEntry.target.id);
+        }
+      },
+      { rootMargin: "-42% 0px -46% 0px", threshold: [0.08, 0.22, 0.46] },
+    );
+
+    sectionIds.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) {
+        observer.observe(element);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, [sectionIds]);
+
+  return activeSection;
+}
+
+function ScrollTelemetry({ activeSection, progress }) {
+  return (
+    <aside className="scroll-telemetry" aria-label="Scroll telemetry">
+      <span>section</span>
+      <strong>{activeSection}</strong>
+      <i>{Math.round(progress * 100).toString().padStart(3, "0")}%</i>
+    </aside>
+  );
+}
+
+function Header({ progress, activeSection }) {
   const navItems = ["work", "direction", "skills", "contact"];
 
   return (
@@ -207,9 +291,14 @@ function Header({ progress }) {
       </a>
       <nav aria-label="Primary navigation">
         {navItems.map((item) => (
-          <a key={item} href={`#${item}`}>
+          <motion.a
+            key={item}
+            href={`#${item}`}
+            className={activeSection === item ? "is-active" : undefined}
+            {...magneticHover}
+          >
             {item}
-          </a>
+          </motion.a>
         ))}
       </nav>
     </header>
@@ -220,10 +309,14 @@ function Hero() {
   const shouldReduceMotion = useReducedMotion();
 
   return (
-    <section className="hero" id="top" aria-labelledby="hero-title">
+    <section
+      className="hero"
+      id="top"
+      aria-labelledby="hero-title"
+    >
       <motion.div
         className="hero-copy"
-        variants={staggerParent}
+        variants={stagger}
         initial={shouldReduceMotion ? false : "hidden"}
         animate="visible"
       >
@@ -270,6 +363,7 @@ function Hero() {
 
 function ProjectCard({ project, index }) {
   const shouldReduceMotion = useReducedMotion();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <motion.article
@@ -279,9 +373,24 @@ function ProjectCard({ project, index }) {
       initial={shouldReduceMotion ? false : "hidden"}
       whileInView="visible"
       viewport={{ once: true, amount: 0.22 }}
+      whileHover={
+        shouldReduceMotion
+          ? undefined
+          : {
+              y: -14,
+              rotateX: index === 1 ? 0.8 : 1.2,
+              rotateY: index === 0 ? -1.4 : index === 2 ? 1.4 : 0,
+              transition: { duration: 0.28, ease: "easeOut" },
+            }
+      }
+      style={borderTrace}
     >
+      <span className="project-card__trace" aria-hidden="true" />
       <div className="project-meta">
-        <p className="eyebrow">{project.eyebrow}</p>
+        <p className="eyebrow">
+          <span>{project.missionCode}</span>
+          {project.eyebrow}
+        </p>
         <span>{project.status}</span>
       </div>
       <div className="project-heading">
@@ -296,6 +405,10 @@ function ProjectCard({ project, index }) {
       </div>
       <p className="spec-label">Mission</p>
       <p className="project-summary">{project.summary}</p>
+      <div className="project-metric">
+        <span>metric</span>
+        <strong>{project.metric}</strong>
+      </div>
       <dl>
         <div>
           <dt>Build</dt>
@@ -306,13 +419,60 @@ function ProjectCard({ project, index }) {
           <dd>{project.impact}</dd>
         </div>
       </dl>
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            className="project-detail"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <p className="spec-label">Mission detail</p>
+            <p>{project.detail}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <p className="spec-label stack-label">Stack</p>
       <ul className="tag-list" aria-label={`${project.title} stack`}>
         {project.stack.map((item) => (
-          <li key={item}>{item}</li>
+          <motion.li
+            key={item}
+            whileHover={shouldReduceMotion ? undefined : { y: -3, scale: 1.04 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+          >
+            {item}
+          </motion.li>
         ))}
       </ul>
+      <motion.button
+        className="detail-toggle"
+        type="button"
+        onClick={() => setIsExpanded((current) => !current)}
+        aria-expanded={isExpanded}
+        {...buttonPress}
+      >
+        {isExpanded ? "Collapse file" : "Expand file"}
+      </motion.button>
     </motion.article>
+  );
+}
+
+function AnimatedSection({ id, className = "", titleId, children }) {
+  const shouldReduceMotion = useReducedMotion();
+
+  return (
+    <motion.section
+      className={`section animated-section ${className}`}
+      id={id}
+      aria-labelledby={titleId}
+      variants={panelReveal}
+      initial={shouldReduceMotion ? false : "hidden"}
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.16 }}
+    >
+      {children}
+    </motion.section>
   );
 }
 
@@ -336,6 +496,8 @@ function SectionIntro({ eyebrow, title, titleId, children }) {
 
 function App() {
   const progress = useScrollProgress();
+  const sectionIds = useMemo(() => ["top", "work", "direction", "skills", "contact"], []);
+  const activeSection = useActiveSection(sectionIds);
   const shouldReduceMotion = useReducedMotion();
 
   const year = useMemo(() => new Date().getFullYear(), []);
@@ -343,11 +505,12 @@ function App() {
   return (
     <>
       <VideoIntro />
-      <Header progress={progress} />
+      <Header progress={progress} activeSection={activeSection} />
+      <ScrollTelemetry activeSection={activeSection} progress={progress} />
       <main>
         <Hero />
 
-        <section className="section work-section" id="work" aria-labelledby="work-title">
+        <AnimatedSection className="work-section" id="work" titleId="work-title">
           <SectionIntro
             eyebrow="Mission files"
             title="Systems proof, not just polish"
@@ -361,9 +524,9 @@ function App() {
               <ProjectCard key={project.title} project={project} index={index} />
             ))}
           </div>
-        </section>
+        </AnimatedSection>
 
-        <section className="section direction-section" id="direction">
+        <section className="section direction-section" id="direction" aria-labelledby="direction-title">
           <motion.div
             className="direction-panel"
             variants={fadeUp}
@@ -372,21 +535,32 @@ function App() {
             viewport={{ once: true, amount: 0.26 }}
           >
             <p className="eyebrow">Engineering vector</p>
-            <h2>Mechanical core. Aerospace edge. Defense-grade discipline.</h2>
+            <h2 id="direction-title">Mechanical core. Aerospace edge. Defense-grade discipline.</h2>
             <p>
               The center of gravity is mechanical engineering. The edge is where
               software, AI, public data, and physical systems make that engineering
               sharper.
             </p>
             <div className="direction-marks" aria-label="Focus areas">
-              <span>climate resilience</span>
-              <span>career intelligence</span>
-              <span>propulsion systems</span>
+              {["climate resilience", "career intelligence", "propulsion systems"].map(
+                (mark, index) => (
+                  <motion.span
+                    key={mark}
+                    initial={shouldReduceMotion ? false : { opacity: 0, x: -18 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, amount: 0.6 }}
+                    transition={{ duration: 0.52, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}
+                    whileHover={shouldReduceMotion ? undefined : { scale: 1.025, y: -4 }}
+                  >
+                    {mark}
+                  </motion.span>
+                ),
+              )}
             </div>
           </motion.div>
         </section>
 
-        <section className="section skills-section" id="skills">
+        <AnimatedSection className="skills-section" id="skills">
           <SectionIntro eyebrow="Capabilities" title="Technical payload">
             The portfolio should keep evolving as the work gets deeper: each skill
             is strongest when tied to a visible project, result, or build note.
@@ -403,7 +577,15 @@ function App() {
               <motion.li
                 key={skill}
                 variants={fadeUp}
-                whileHover={{ y: -4, borderColor: "rgba(202, 207, 210, 0.34)" }}
+                whileHover={
+                  shouldReduceMotion
+                    ? undefined
+                    : {
+                        y: -8,
+                        scale: 1.025,
+                        borderColor: "rgba(202, 207, 210, 0.38)",
+                      }
+                }
                 whileTap={{ scale: 0.985 }}
                 transition={{ duration: 0.18, ease: "easeOut" }}
               >
@@ -411,9 +593,9 @@ function App() {
               </motion.li>
             ))}
           </motion.ul>
-        </section>
+        </AnimatedSection>
 
-        <section className="section contact-section" id="contact">
+        <AnimatedSection className="contact-section" id="contact">
           <motion.div
             className="contact-card"
             variants={fadeUp}
@@ -436,7 +618,7 @@ function App() {
               </motion.a>
             </div>
           </motion.div>
-        </section>
+        </AnimatedSection>
       </main>
 
       <footer className="site-footer">
