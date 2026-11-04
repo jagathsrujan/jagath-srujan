@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import introVideoUrl from "./assets/intro/portfolio-intro.mp4";
 import portraitUrl from "./assets/jagath-portrait.jpeg";
 import canImg from "./assets/work/can.jpg";
 import cycloImg from "./assets/work/cyclo.jpg";
@@ -178,6 +179,95 @@ function Reveal({ as = "div", delay = 0, children, ...rest }) {
     >
       {children}
     </Tag>
+  );
+}
+
+const INTRO_KEY = "jagath-portfolio-video-intro-seen";
+
+function readIntroSeen() {
+  try {
+    return window.sessionStorage.getItem(INTRO_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function VideoIntro() {
+  const reduce = useReducedMotion();
+  const [visible, setVisible] = useState(() => !readIntroSeen());
+
+  const finish = () => {
+    try {
+      window.sessionStorage.setItem(INTRO_KEY, "true");
+    } catch {
+      /* storage blocked: intro just plays again next visit */
+    }
+    setVisible(false);
+  };
+
+  useEffect(() => {
+    if (!visible) return undefined;
+    document.documentElement.style.overflow = "hidden";
+    const onKey = (e) => e.key === "Escape" && finish();
+    window.addEventListener("keydown", onKey);
+    // Safety net in case the video stalls; reduced-motion users get a short title card instead.
+    const t = window.setTimeout(finish, reduce ? 1400 : 12000);
+    return () => {
+      document.documentElement.style.overflow = "";
+      window.removeEventListener("keydown", onKey);
+      window.clearTimeout(t);
+    };
+  }, [visible, reduce]);
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          className="intro"
+          role="dialog"
+          aria-label="Opening video"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0, scale: 1.02 }}
+          transition={{ duration: 0.7, ease }}
+        >
+          {!reduce && (
+            <video
+              className="intro-bg"
+              src={introVideoUrl}
+              autoPlay
+              muted
+              playsInline
+              aria-hidden="true"
+            />
+          )}
+          {!reduce && (
+            <video
+              className="intro-main"
+              src={introVideoUrl}
+              autoPlay
+              muted
+              playsInline
+              preload="auto"
+              onEnded={finish}
+              onError={finish}
+            />
+          )}
+          <div className="intro-shade" aria-hidden="true" />
+          <span className="intro-corner intro-corner--tl" aria-hidden="true" />
+          <span className="intro-corner intro-corner--br" aria-hidden="true" />
+          <div className="intro-copy">
+            <span className="label">
+              <span className="dot" aria-hidden="true" /> Portfolio · Rev 2026.11
+            </span>
+            <strong>Jagath Srujan</strong>
+          </div>
+          <button className="intro-skip" type="button" onClick={finish}>
+            Skip intro
+          </button>
+          {!reduce && <span className="intro-progress" aria-hidden="true" />}
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -387,6 +477,7 @@ function Tile({ p, i }) {
 function App() {
   return (
     <>
+      <VideoIntro />
       <a className="skip-link" href="#work">
         Skip to work
       </a>
