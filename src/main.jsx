@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import introVideoUrl from "./assets/intro/portfolio-intro.mp4";
-import portraitUrl from "./assets/jagath-portrait.jpeg";
-import canImg from "./assets/work/can.jpg";
-import cycloImg from "./assets/work/cyclo.jpg";
-import gearboxImg from "./assets/work/gearbox.jpg";
-import pulsejetImg from "./assets/work/pulsejet.jpg";
+import portraitUrl from "./assets/jagath-portrait.webp";
+import canImg from "./assets/work/can.webp";
+import cycloImg from "./assets/work/cyclo.webp";
+import gearboxImg from "./assets/work/gearbox.webp";
+import pulsejetImg from "./assets/work/pulsejet.webp";
 import "./styles.css";
 
 const GH = "https://github.com/jagathsrujan";
@@ -20,6 +19,7 @@ const featured = [
   {
     code: "EL-01",
     title: "MCP2515 CAN Bus Module",
+    areas: ["Electronics"],
     tag: "PCB design · KiCad",
     href: `${GH}/mcp2515-can-bus-module`,
     img: canImg,
@@ -37,6 +37,7 @@ const featured = [
   {
     code: "ME-02",
     title: "Cycloidal Drive, 15:1",
+    areas: ["Mechanisms", "Analysis"],
     tag: "Mechanisms · FEA",
     href: `${GH}/3d-printable-cycloidal-drive`,
     img: cycloImg,
@@ -54,6 +55,7 @@ const featured = [
   {
     code: "ME-03",
     title: "Two-Stage Planetary Gearbox",
+    areas: ["Mechanisms"],
     tag: "Mechanisms · 3D printing",
     href: `${GH}/3d-printable-planetary-gearbox`,
     img: gearboxImg,
@@ -71,6 +73,7 @@ const featured = [
   {
     code: "PR-04",
     title: "PJ-4.5 Valveless Pulse Jet",
+    areas: ["Propulsion"],
     tag: "Propulsion · CAD",
     href: `${GH}/pj45-pulsejet`,
     img: pulsejetImg,
@@ -91,18 +94,21 @@ const featured = [
 const moreBuilds = [
   {
     title: "Low-Cost Twin-Motor UAV",
+    areas: ["Aircraft", "Propulsion"],
     tag: "Aircraft",
     href: `${GH}/low-cost-twin-motor-uav`,
     text: "Repairable fixed-wing proposal: 1.5 m XPS wing on a NACA 2412 section, removable nacelles, catapult launch and a formula-driven BOM.",
   },
   {
     title: "Engineering Harness",
+    areas: ["Analysis"],
     tag: "Design tooling",
     href: `${GH}/engineering-harness`,
     text: "Designs as typed, unit-aware graphs. A deterministic solver computes every number, and each value carries its provenance.",
   },
   {
     title: "CAD Portfolio",
+    areas: ["Mechanisms"],
     tag: "Design studies",
     href: `${GH}/cad-portfolio`,
     text: "Mechanism and packaging studies: a self-centring compliant gripper, a kinematic docking nest and a liquid-cooled compute tray.",
@@ -164,17 +170,45 @@ const nav = [
   ["contact", "Contact"],
 ];
 
-const ease = [0.16, 1, 0.3, 1];
 
-function Reveal({ as = "div", delay = 0, children, ...rest }) {
-  const reduce = useReducedMotion();
-  const Tag = motion[as];
+const areaFilters = ["All", "Mechanisms", "Propulsion", "Aircraft", "Electronics", "Analysis"];
+
+/* ---------- Scroll reveal (one shared observer, no animation library) ---------- */
+let revealObserver;
+function getRevealObserver() {
+  if (revealObserver || typeof IntersectionObserver === "undefined") return revealObserver;
+  revealObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-in");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    },
+    { rootMargin: "0px 0px -10% 0px", threshold: 0.12 },
+  );
+  return revealObserver;
+}
+
+function Reveal({ as: Tag = "div", delay = 0, className = "", style, children, ...rest }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    const io = getRevealObserver();
+    if (!el) return undefined;
+    if (!io) {
+      el.classList.add("is-in");
+      return undefined;
+    }
+    io.observe(el);
+    return () => io.unobserve(el);
+  }, []);
   return (
     <Tag
-      initial={reduce ? false : { opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.7, delay, ease }}
+      ref={ref}
+      className={`reveal ${className}`.trim()}
+      style={delay ? { ...style, "--delay": `${delay}s` } : style}
       {...rest}
     >
       {children}
@@ -182,95 +216,155 @@ function Reveal({ as = "div", delay = 0, children, ...rest }) {
   );
 }
 
-const INTRO_KEY = "jagath-portfolio-video-intro-seen";
-
-function readIntroSeen() {
+/* ---------- Storage helpers (storage can be blocked) ---------- */
+function storageGet(key) {
   try {
-    return window.sessionStorage.getItem(INTRO_KEY) === "true";
+    return window.localStorage.getItem(key);
   } catch {
-    return false;
+    return null;
+  }
+}
+function storageSet(key, value) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    /* ignore */
   }
 }
 
+function prefersReducedMotion() {
+  return typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+}
+
+/* ---------- Intro video: first visit only, click anywhere to skip ---------- */
+const INTRO_KEY = "jagath-portfolio-intro-seen";
+
 function VideoIntro() {
-  const reduce = useReducedMotion();
-  const [visible, setVisible] = useState(() => !readIntroSeen());
+  const reduce = useMemo(prefersReducedMotion, []);
+  const [state, setState] = useState(() => (storageGet(INTRO_KEY) === "true" ? "done" : "playing"));
 
   const finish = () => {
-    try {
-      window.sessionStorage.setItem(INTRO_KEY, "true");
-    } catch {
-      /* storage blocked: intro just plays again next visit */
-    }
-    setVisible(false);
+    storageSet(INTRO_KEY, "true");
+    setState((s) => (s === "playing" ? "leaving" : s));
   };
 
   useEffect(() => {
-    if (!visible) return undefined;
-    document.documentElement.style.overflow = "hidden";
+    if (state === "done") return undefined;
+    if (state === "leaving") {
+      const t = window.setTimeout(() => setState("done"), 600);
+      return () => window.clearTimeout(t);
+    }
+    document.documentElement.classList.add("intro-open");
     const onKey = (e) => e.key === "Escape" && finish();
     window.addEventListener("keydown", onKey);
-    // Safety net in case the video stalls; reduced-motion users get a short title card instead.
-    const t = window.setTimeout(finish, reduce ? 1400 : 12000);
+    const t = window.setTimeout(finish, reduce ? 1400 : 12000); // safety net if the video stalls
     return () => {
-      document.documentElement.style.overflow = "";
+      document.documentElement.classList.remove("intro-open");
       window.removeEventListener("keydown", onKey);
       window.clearTimeout(t);
     };
-  }, [visible, reduce]);
+  }, [state, reduce]);
+
+  if (state === "done") return null;
 
   return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          className="intro"
-          role="dialog"
-          aria-label="Opening video"
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.02 }}
-          transition={{ duration: 0.7, ease }}
-        >
-          {!reduce && (
-            <video
-              className="intro-bg"
-              src={introVideoUrl}
-              autoPlay
-              muted
-              playsInline
-              aria-hidden="true"
-            />
-          )}
-          {!reduce && (
-            <video
-              className="intro-main"
-              src={introVideoUrl}
-              autoPlay
-              muted
-              playsInline
-              preload="auto"
-              onEnded={finish}
-              onError={finish}
-            />
-          )}
-          <div className="intro-shade" aria-hidden="true" />
-          <span className="intro-corner intro-corner--tl" aria-hidden="true" />
-          <span className="intro-corner intro-corner--br" aria-hidden="true" />
-          <div className="intro-copy">
-            <span className="label">
-              <span className="dot" aria-hidden="true" /> Portfolio · Rev 2026.11
-            </span>
-            <strong>Jagath Srujan</strong>
-          </div>
-          <button className="intro-skip" type="button" onClick={finish}>
-            Skip intro
-          </button>
-          {!reduce && <span className="intro-progress" aria-hidden="true" />}
-        </motion.div>
+    <div
+      className={`intro${state === "leaving" ? " is-leaving" : ""}`}
+      role="dialog"
+      aria-label="Opening video. Click anywhere or press Escape to skip."
+      onClick={finish}
+    >
+      {!reduce && (
+        <video className="intro-bg" src={introVideoUrl} autoPlay muted playsInline aria-hidden="true" />
       )}
-    </AnimatePresence>
+      {!reduce && (
+        <video
+          className="intro-main"
+          src={introVideoUrl}
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+          onEnded={finish}
+          onError={finish}
+        />
+      )}
+      <div className="intro-shade" aria-hidden="true" />
+      <span className="intro-corner intro-corner--tl" aria-hidden="true" />
+      <span className="intro-corner intro-corner--br" aria-hidden="true" />
+      <div className="intro-copy">
+        <span className="label">
+          <span className="dot" aria-hidden="true" /> Portfolio · Rev 2026.11
+        </span>
+        <strong>Jagath Srujan</strong>
+        <span className="intro-hint">Click anywhere to skip</span>
+      </div>
+      <button className="intro-skip" type="button" onClick={finish} autoFocus>
+        Skip intro
+      </button>
+      {!reduce && <span className="intro-progress" aria-hidden="true" />}
+    </div>
   );
 }
 
+/* ---------- Theme toggle ---------- */
+const THEME_KEY = "jagath-portfolio-theme";
+
+function currentTheme() {
+  const set = document.documentElement.dataset.theme;
+  if (set === "light" || set === "dark") return set;
+  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function ThemeToggle() {
+  const [theme, setTheme] = useState(currentTheme);
+
+  useEffect(() => {
+    const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
+    if (!mq) return undefined;
+    const onChange = () => {
+      if (!document.documentElement.dataset.theme) setTheme(currentTheme());
+    };
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
+
+  const toggle = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    storageSet(THEME_KEY, next);
+    setTheme(next);
+  };
+
+  const label = theme === "dark" ? "Switch to light theme" : "Switch to dark theme";
+  return (
+    <button className="theme-toggle" type="button" onClick={toggle} aria-label={label} title={label}>
+      {theme === "dark" ? (
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+          <path
+            d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+          />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path
+            d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinejoin="round"
+          />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+/* ---------- Layout ---------- */
 function useScrolled() {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
@@ -300,62 +394,61 @@ function Header() {
           <span className="wordmark-mark" aria-hidden="true">JS</span>
           <span className="wordmark-name">Jagath Srujan</span>
         </a>
-        <button
-          className="menu-toggle"
-          type="button"
-          aria-expanded={open}
-          aria-controls="primary-nav"
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? "Close" : "Menu"}
-        </button>
-        <nav id="primary-nav" className={open ? "is-open" : undefined} aria-label="Primary">
-          {nav.map(([id, label]) => (
-            <a key={id} href={`#${id}`} onClick={() => setOpen(false)}>
-              {label}
+        <div className="header-actions">
+          <nav id="primary-nav" className={open ? "is-open" : undefined} aria-label="Primary">
+            {nav.map(([id, label]) => (
+              <a key={id} href={`#${id}`} onClick={() => setOpen(false)}>
+                {label}
+              </a>
+            ))}
+            <a className="nav-cta" href={`mailto:${links.email}`}>
+              Get in touch
             </a>
-          ))}
-          <a className="nav-cta" href={`mailto:${links.email}`}>
-            Get in touch
-          </a>
-        </nav>
+          </nav>
+          <ThemeToggle />
+          <button
+            className="menu-toggle"
+            type="button"
+            aria-expanded={open}
+            aria-controls="primary-nav"
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? "Close" : "Menu"}
+          </button>
+        </div>
       </div>
     </header>
   );
 }
 
 function Hero() {
-  const reduce = useReducedMotion();
-  const item = (i) => ({
-    initial: reduce ? false : { opacity: 0, y: 22 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.8, delay: 0.08 * i, ease },
-  });
-
+  const rise = (i) => ({ className: "rise", style: { "--delay": `${0.08 * i}s` } });
   return (
     <section className="hero" id="top" aria-labelledby="hero-title">
       <div className="wrap hero-grid">
         <div className="hero-copy">
-          <motion.p className="label" {...item(0)}>
-            <span className="dot" aria-hidden="true" /> Mechanical engineering student · Bengaluru
-          </motion.p>
-          <motion.h1 id="hero-title" {...item(1)}>
+          <p {...rise(0)}>
+            <span className="label">
+              <span className="dot" aria-hidden="true" /> Mechanical engineering student · Bengaluru
+            </span>
+          </p>
+          <h1 id="hero-title" {...rise(1)}>
             I design mechanisms, propulsion rigs and the boards that drive them.
-          </motion.h1>
-          <motion.p className="lede" {...item(2)}>
+          </h1>
+          <p {...rise(2)} className="rise lede">
             I'm Jagath Srujan. My work runs from CAD and FEA to printed prototypes,
             PCBs and the software that ties them together. Interested in aerospace
             and defence hardware, and open to internships.
-          </motion.p>
-          <motion.div className="hero-actions" {...item(3)}>
+          </p>
+          <div {...rise(3)} className="rise hero-actions">
             <a className="btn btn-primary" href="#work">
               See the work
             </a>
             <a className="btn" href={`mailto:${links.email}`}>
               {links.email}
             </a>
-          </motion.div>
-          <motion.dl className="hero-facts" {...item(4)}>
+          </div>
+          <dl {...rise(4)} className="rise hero-facts">
             <div>
               <dt>Focus</dt>
               <dd>Mechanisms, propulsion, UAVs</dd>
@@ -368,17 +461,18 @@ function Hero() {
               <dt>Also</dt>
               <dd>UVCE Rocketry Club, MARVEL lab</dd>
             </div>
-          </motion.dl>
+          </dl>
         </div>
 
-        <motion.figure
-          className="portrait"
-          initial={reduce ? false : { opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, delay: 0.15, ease }}
-        >
+        <figure className="portrait rise" style={{ "--delay": "0.15s" }}>
           <div className="portrait-img">
-            <img src={portraitUrl} alt="Jagath Srujan working at a laptop" />
+            <img
+              src={portraitUrl}
+              alt="Jagath Srujan working at a laptop"
+              width="719"
+              height="1600"
+              fetchpriority="high"
+            />
           </div>
           <figcaption className="title-block">
             <span>
@@ -391,7 +485,7 @@ function Hero() {
               <i>Rev</i> 2026.11
             </span>
           </figcaption>
-        </motion.figure>
+        </figure>
       </div>
     </section>
   );
@@ -425,8 +519,12 @@ function SectionHead({ index, title, children, id }) {
 function FeaturedCard({ p, i }) {
   return (
     <Reveal as="article" className={`feature${i % 2 ? " is-flipped" : ""}`}>
-      <a className={`feature-media${p.fit ? " is-contain" : ""}`} href={p.href} aria-label={`${p.title} on GitHub`}>
-        <img src={p.img} alt={p.alt} loading="lazy" />
+      <a
+        className={`feature-media${p.fit ? " is-contain" : ""}`}
+        href={p.href}
+        aria-label={`${p.title} on GitHub`}
+      >
+        <img src={p.img} alt={p.alt} loading="lazy" decoding="async" />
         <span className="feature-code">{p.code}</span>
       </a>
       <div className="feature-body">
@@ -474,6 +572,60 @@ function Tile({ p, i }) {
   );
 }
 
+function WorkSection() {
+  const [area, setArea] = useState("All");
+  const match = (p) => area === "All" || p.areas.includes(area);
+  const shownFeatured = featured.filter(match);
+  const shownMore = moreBuilds.filter(match);
+  const count = shownFeatured.length + shownMore.length;
+
+  return (
+    <section className="section" id="work" aria-labelledby="work-title">
+      <div className="wrap">
+        <SectionHead index="01" id="work" title="Selected hardware">
+          Four builds that show the range: a PCB taken to fab-ready, two printed
+          gear reducers, and a jet engine test rig.
+        </SectionHead>
+
+        <div className="filters" role="group" aria-label="Filter projects by area">
+          {areaFilters.map((a) => (
+            <button
+              key={a}
+              type="button"
+              className="chip"
+              aria-pressed={area === a}
+              onClick={() => setArea(a)}
+            >
+              {a}
+            </button>
+          ))}
+          <span className="filter-count" aria-live="polite">
+            {count} {count === 1 ? "project" : "projects"}
+          </span>
+        </div>
+
+        {shownFeatured.length > 0 && (
+          <div className="features">
+            {shownFeatured.map((p, i) => (
+              <FeaturedCard key={p.title} p={p} i={i} />
+            ))}
+          </div>
+        )}
+        {shownMore.length > 0 && (
+          <>
+            <h3 className={`sub-head${shownFeatured.length ? "" : " is-first"}`}>More engineering</h3>
+            <div className={`tiles tiles-${Math.min(shownMore.length, 3)}`}>
+              {shownMore.map((p, i) => (
+                <Tile key={p.title} p={p} i={i} />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function App() {
   return (
     <>
@@ -485,28 +637,7 @@ function App() {
       <main>
         <Hero />
         <Disciplines />
-
-        <section className="section" id="work" aria-labelledby="work-title">
-          <div className="wrap">
-            <SectionHead index="01" id="work" title="Selected hardware">
-              Four builds that show the range: a PCB taken to fab-ready, two printed
-              gear reducers, and a jet engine test rig.
-            </SectionHead>
-            <div className="features">
-              {featured.map((p, i) => (
-                <FeaturedCard key={p.title} p={p} i={i} />
-              ))}
-            </div>
-            <Reveal as="h3" className="sub-head">
-              More engineering
-            </Reveal>
-            <div className="tiles tiles-3">
-              {moreBuilds.map((p, i) => (
-                <Tile key={p.title} p={p} i={i} />
-              ))}
-            </div>
-          </div>
-        </section>
+        <WorkSection />
 
         <section className="section section-alt" id="software" aria-labelledby="software-title">
           <div className="wrap">
